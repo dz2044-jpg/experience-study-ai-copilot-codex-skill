@@ -54,7 +54,26 @@ Key artifacts:
 - runs/test_e2e_gender/artifacts/ai/ai_ae_packet.json
 ```
 
-## 2. Feature Engineering Then A/E
+## 2. Ambiguous Multi-Dimension A/E Guard
+
+**Testing message**
+
+```text
+Use data/input/synthetic_inforce.csv. Run count and amount A/E by Gender and risk class.
+```
+
+**Suggested response**
+
+```text
+Do you want separate 1D breakouts by `Gender` and `Risk_Class`, or one combined 2D cohort breakout by `Gender` x `Risk_Class`?
+```
+
+No CLI command should be run until the user clarifies. After clarification:
+
+- Separate 1D breakouts should be run as separate A/E analyses, one grouped by `Gender` and one grouped by `Risk_Class`.
+- A combined 2D cohort breakout should be run as one A/E analysis grouped by both `Gender` and `Risk_Class`.
+
+## 3. Feature Engineering Then A/E
 
 **Testing message**
 
@@ -89,7 +108,7 @@ Expected commands:
 - uv run experience-study packet --output-dir runs/test_face_amount_bands
 ```
 
-## 3. Custom Banding
+## 4. Custom Banding
 
 **Testing message**
 
@@ -120,7 +139,7 @@ Expected artifacts:
 The methodology log should include a band event with source_column Face_Amount, new_column Face_Amount_Band, strategy custom, custom_bins, and labels.
 ```
 
-## 4. Categorical Regroup
+## 5. Categorical Regroup
 
 **Testing message**
 
@@ -152,7 +171,7 @@ Expected artifacts:
 - runs/test_risk_regroup/artifacts/audit/artifact_manifest.json
 ```
 
-## 5. State And Readiness Check
+## 6. State And Readiness Check
 
 **Testing message**
 
@@ -175,7 +194,7 @@ Report:
 If latest A/E or latest packet is missing, the fallback is to rerun experience-study ae and then experience-study packet after confirming the prepared dataset exists.
 ```
 
-## 6. Stale Packet Guardrail
+## 7. Stale Packet Guardrail
 
 **Testing message**
 
@@ -199,7 +218,7 @@ Example:
 - uv run experience-study packet --output-dir runs/test_stale_packet
 ```
 
-## 7. Raw Numeric Dimension Rejection
+## 8. Raw Numeric Dimension Rejection
 
 **Testing message**
 
