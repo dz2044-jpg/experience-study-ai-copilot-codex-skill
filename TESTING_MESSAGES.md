@@ -2,6 +2,8 @@
 
 Use these messages to test the end-to-end Experience Study workflow, deterministic calculation path, feature-engineering path, audit artifacts, and fallback/error behavior.
 
+When a workflow produces A/E results, the Codex response should include a presentation-style Markdown cohort table directly in the message, in addition to artifact paths. Use count-specific columns for count A/E, amount-specific columns for amount A/E, and separate count and amount tables when both measures are requested.
+
 Each section includes:
 
 - **Testing message**: paste this into Codex.
@@ -19,6 +21,20 @@ Use data/input/synthetic_inforce.csv. Run an end-to-end Experience Study A/E wor
 
 ```text
 Completed the end-to-end deterministic Experience Study workflow in runs/test_e2e_gender.
+
+Count A/E Results:
+
+| Cohort | Actual Deaths | Expected Deaths | Count A/E | Count A/E CI |
+| --- | ---: | ---: | ---: | ---: |
+| Gender=M | ... | ... | ... | ... |
+| Gender=F | ... | ... | ... | ... |
+
+Amount A/E Results:
+
+| Cohort | Actual Amount | Expected Amount | Amount A/E | Amount A/E CI |
+| --- | ---: | ---: | ---: | ---: |
+| Gender=M | ... | ... | ... | ... |
+| Gender=F | ... | ... | ... | ... |
 
 Commands run:
 - uv run experience-study profile data/input/synthetic_inforce.csv --output-dir runs/test_e2e_gender
@@ -51,6 +67,15 @@ Use data/input/synthetic_inforce.csv and output dir runs/test_face_amount_bands.
 ```text
 Completed Face_Amount_Band feature engineering and amount A/E by the engineered cohort.
 
+Amount A/E Results:
+
+| Cohort | Actual Amount | Expected Amount | Amount A/E | Amount A/E CI |
+| --- | ---: | ---: | ---: | ---: |
+| Face_Amount_Band=215000 to 252500 | 220000.00 | 165000.00 | 1.33 | 0.44 to 1.33 |
+| Face_Amount_Band=252500 to 300000 | 150000.00 | 162000.00 | 0.93 | 0.11 to 1.67 |
+| Face_Amount_Band=125000 to 195000 | 0.00 | 115000.00 | 0.00 | 0.00 to 4.05 |
+| Face_Amount_Band=195000 to 215000 | 0.00 | 130000.00 | 0.00 | 0.00 to 4.34 |
+
 Calculation path:
 - Feature engineering happened in deterministic Python through experience-study band, backed by experience_study.feature_engineering.run_band.
 - A/E aggregation happened in deterministic Python through experience-study ae, backed by experience_study.analysis.run_ae_analysis.
@@ -77,6 +102,12 @@ Use data/input/synthetic_inforce.csv and output dir runs/test_custom_face_amount
 ```text
 Created custom Face_Amount_Band cohorts and ran amount A/E by the engineered dimension.
 
+Amount A/E Results:
+
+| Cohort | Actual Amount | Expected Amount | Amount A/E | Amount A/E CI |
+| --- | ---: | ---: | ---: | ---: |
+| Face_Amount_Band=... | ... | ... | ... | ... |
+
 The custom banding used deterministic Python through experience-study band with --strategy custom. The final null in the bin list created an open-ended upper bin.
 
 Expected artifacts:
@@ -101,6 +132,12 @@ Use data/input/synthetic_inforce.csv and output dir runs/test_risk_regroup. Regr
 
 ```text
 Created Risk_Class_Group with deterministic categorical regrouping, then ran count A/E by Risk_Class_Group and built the sanitized AI packet.
+
+Count A/E Results:
+
+| Cohort | Actual Deaths | Expected Deaths | Count A/E | Count A/E CI |
+| --- | ---: | ---: | ---: | ---: |
+| Risk_Class_Group=... | ... | ... | ... | ... |
 
 Calculation path:
 - Regrouping happened through experience-study regroup.
