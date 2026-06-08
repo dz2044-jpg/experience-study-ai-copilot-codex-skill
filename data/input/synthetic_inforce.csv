@@ -1,0 +1,9 @@
+Policy_Number,Duration,MAC,MOC,MEC,MAF,MEF,COLA,Face_Amount,Issue_Age,Gender,Smoker,Risk_Class,Product_Group,Study_Year
+P001,1,1,1.0,0.20,100000.0,80000.0,100000.0,250000,42,F,No,Preferred,Term,2021
+P002,1,0,0.80,0.15,0.0,70000.0,,200000,51,M,Yes,Standard,Term,2021
+P003,1,0,1.0,0.18,0.0,65000.0,,180000,36,F,No,Preferred Plus,Whole Life,2022
+P004,1,1,1.0,0.22,150000.0,90000.0,150000.0,300000,47,M,Yes,Standard Plus,Term,2022
+P005,1,0,0.60,0.11,0.0,50000.0,,125000,29,F,No,Preferred,Whole Life,2023
+P006,1,1,1.0,0.25,120000.0,85000.0,120000.0,220000,57,M,No,Standard,Term,2023
+P007,1,0,1.0,0.14,0.0,60000.0,,210000,41,F,Yes,Standard,Term,2023
+P008,1,0,0.90,0.17,0.0,72000.0,,260000,63,M,No,Preferred,Whole Life,2023
