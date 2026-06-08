@@ -106,8 +106,65 @@ def _format_number(value: Any) -> str:
     return f"{numeric:.2f}"
 
 
+def _format_interval(lower: Any, upper: Any) -> str:
+    if lower is None or upper is None or lower == "" or upper == "":
+        return "n/a"
+    return f"{_format_number(lower)} to {_format_number(upper)}"
+
+
 def _escape_table_cell(value: Any) -> str:
     return str(value).replace("\n", "<br>").replace("|", r"\|")
+
+
+def _presentation_table_specs(measure: str) -> list[dict[str, Any]]:
+    count_spec = {
+        "title": "Count A/E Results",
+        "headers": ["Cohort", "Actual Deaths", "Expected Deaths", "Count A/E", "Count A/E CI"],
+        "fields": {
+            "actual": "Sum_MAC",
+            "expected": "Sum_MEC",
+            "ratio": "AE_Ratio_Count",
+            "ci_lower": "AE_Count_CI_Lower",
+            "ci_upper": "AE_Count_CI_Upper",
+        },
+    }
+    amount_spec = {
+        "title": "Amount A/E Results",
+        "headers": ["Cohort", "Actual Amount", "Expected Amount", "Amount A/E", "Amount A/E CI"],
+        "fields": {
+            "actual": "Sum_MAF",
+            "expected": "Sum_MEF",
+            "ratio": "AE_Ratio_Amount",
+            "ci_lower": "AE_Amount_CI_Lower",
+            "ci_upper": "AE_Amount_CI_Upper",
+        },
+    }
+    if measure == "count":
+        return [count_spec]
+    if measure == "amount":
+        return [amount_spec]
+    return [count_spec, amount_spec]
+
+
+def _print_presentation_table(rows: list[dict[str, Any]], spec: dict[str, Any]) -> None:
+    print(spec["title"])
+    print("| " + " | ".join(spec["headers"]) + " |")
+    print("| --- | ---: | ---: | ---: | ---: |")
+    fields = spec["fields"]
+    for row in rows:
+        print(
+            "| "
+            + " | ".join(
+                [
+                    _escape_table_cell(row.get("Dimensions", "")),
+                    _format_number(row.get(fields["actual"])),
+                    _format_number(row.get(fields["expected"])),
+                    _format_number(row.get(fields["ratio"])),
+                    _format_interval(row.get(fields["ci_lower"]), row.get(fields["ci_upper"])),
+                ]
+            )
+            + " |"
+        )
 
 
 def _print_ae_summary(result: dict[str, Any]) -> None:
@@ -116,24 +173,12 @@ def _print_ae_summary(result: dict[str, Any]) -> None:
     if not rows:
         print("No cohorts met the requested criteria.")
         return
-    print("")
-    print("Summary of A/E Results")
-    print("| Cohort Dimension | Actual Deaths (MAC) | Expected (MEC) | A/E Ratio (Count) | A/E Ratio (Amount) |")
-    print("| --- | ---: | ---: | ---: | ---: |")
-    for row in rows:
-        print(
-            "| "
-            + " | ".join(
-                [
-                    _escape_table_cell(row.get("Dimensions", "")),
-                    _format_number(row.get("Sum_MAC")),
-                    _format_number(row.get("Sum_MEC")),
-                    _format_number(row.get("AE_Ratio_Count")),
-                    _format_number(row.get("AE_Ratio_Amount")),
-                ]
-            )
-            + " |"
-        )
+    measure = str(result.get("data", {}).get("measure") or "both")
+    for index, spec in enumerate(_presentation_table_specs(measure)):
+        print("")
+        if index:
+            print("")
+        _print_presentation_table(rows, spec)
 
 
 def _print_result(result: dict[str, Any]) -> None:

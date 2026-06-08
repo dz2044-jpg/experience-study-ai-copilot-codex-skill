@@ -107,6 +107,73 @@ def test_profile_creates_issue_age_band_and_one_way_ae_artifacts(
     assert issue_age_df["Sum_MAC"].sum() == gender_df["Sum_MAC"].sum()
 
 
+def test_cli_ae_prints_measure_specific_presentation_tables(
+    tmp_path: Path,
+    sample_csv_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    output_dir = tmp_path / "presentation-table"
+    assert main(["profile", str(sample_csv_path), "--output-dir", str(output_dir)]) == 0
+    capsys.readouterr()
+
+    assert (
+        main(
+            [
+                "ae",
+                "--output-dir",
+                str(output_dir),
+                "--measure",
+                "count",
+                "--group-by",
+                "Gender",
+            ]
+        )
+        == 0
+    )
+    count_output = capsys.readouterr().out
+    assert "Summary of A/E Results" not in count_output
+    assert "Count A/E Results" in count_output
+    assert "| Cohort | Actual Deaths | Expected Deaths | Count A/E | Count A/E CI |" in count_output
+    assert "| Gender=" in count_output
+
+    assert (
+        main(
+            [
+                "ae",
+                "--output-dir",
+                str(output_dir),
+                "--measure",
+                "amount",
+                "--group-by",
+                "Gender",
+            ]
+        )
+        == 0
+    )
+    amount_output = capsys.readouterr().out
+    assert "Amount A/E Results" in amount_output
+    assert "| Cohort | Actual Amount | Expected Amount | Amount A/E | Amount A/E CI |" in amount_output
+    assert "| Gender=" in amount_output
+
+    assert (
+        main(
+            [
+                "ae",
+                "--output-dir",
+                str(output_dir),
+                "--measure",
+                "both",
+                "--group-by",
+                "Gender",
+            ]
+        )
+        == 0
+    )
+    both_output = capsys.readouterr().out
+    assert "Count A/E Results" in both_output
+    assert "Amount A/E Results" in both_output
+
+
 def test_cli_golden_run_writes_manifest_log_context_and_packet(
     tmp_path: Path,
     sample_csv_path: Path,
