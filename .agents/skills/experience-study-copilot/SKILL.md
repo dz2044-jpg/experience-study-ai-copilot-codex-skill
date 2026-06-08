@@ -5,7 +5,7 @@ description: Use this skill for deterministic Experience Study A/E workflows: pr
 
 # Experience Study Copilot
 
-Use this skill when the user asks for Experience Study, actual-to-expected, A/E, mortality experience, count A/E, amount A/E, grouped cohort analysis, or breakouts by actuarial dimensions.
+Use this skill when the user asks for Experience Study, actual-to-expected, A/E, mortality experience, count A/E, amount A/E, grouped cohort analysis, feature engineering, banding, bucketing, regrouping, or breakouts by actuarial dimensions.
 
 ## Core Rules
 
@@ -23,9 +23,10 @@ Use this skill when the user asks for Experience Study, actual-to-expected, A/E,
 1. Confirm or choose an `--output-dir`.
 2. Profile the dataset if no prepared dataset exists.
 3. Validate before A/E analysis.
-4. Run grouped A/E analysis with `experience-study ae`.
-5. Build `artifacts/ai/ai_ae_packet.json` before any interpretation.
-6. Interpret only the sanitized packet and aggregate CSV outputs.
+4. Run deterministic feature engineering with `experience-study band` or `experience-study regroup` when the requested dimension does not already exist as an eligible categorical cohort dimension.
+5. Run grouped A/E analysis with `experience-study ae`.
+6. Build `artifacts/ai/ai_ae_packet.json` before any interpretation.
+7. Interpret only the sanitized packet and aggregate CSV outputs.
 
 Read references as needed:
 
@@ -46,4 +47,10 @@ Read references as needed:
 - "For product group X" means filter `Product_Group == X`.
 - "By product group" means group by `Product_Group`.
 - "At least N claims" or "at least N deaths" means `--min-claims N`.
+- "Band", "bucket", "bin", "turn numeric variable into bands", or "create categorical feature" means use `experience-study band` before A/E analysis.
+- "Equal-width bands" means `experience-study band --strategy equal-width --bins N`.
+- "Percentile", "quantile", "equal-frequency", or "roughly equal-sized groups" means `experience-study band --strategy quantile --bins N`.
+- "Custom cut points" means `experience-study band --strategy custom --custom-bins JSON --labels JSON`.
+- "Regroup", "collapse", "combine categories", or "map categories" means use `experience-study regroup` before A/E analysis.
+- After `band` or `regroup`, rerun `experience-study ae` before `experience-study packet`; feature engineering clears stale latest A/E and packet pointers.
 - If filtering versus grouping is ambiguous, ask a concise clarification before running.

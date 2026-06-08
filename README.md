@@ -24,16 +24,58 @@ uv run experience-study run data/input/synthetic_inforce.csv \
 uv run experience-study doctor --output-dir runs/demo
 ```
 
+Feature engineering example:
+
+```bash
+uv run experience-study band \
+  --output-dir runs/demo \
+  --source-column Face_Amount \
+  --new-column Face_Amount_Band \
+  --strategy quantile \
+  --bins 4
+
+uv run experience-study ae \
+  --output-dir runs/demo \
+  --measure amount \
+  --group-by Face_Amount_Band
+```
+
 ## CLI
 
 ```bash
 experience-study profile DATA_PATH --output-dir DIR
 experience-study schema --output-dir DIR [--data-path PATH]
 experience-study validate --output-dir DIR [--data-path PATH]
+experience-study band --output-dir DIR --source-column COL --new-column COL --strategy equal-width|quantile|custom
+experience-study regroup --output-dir DIR --source-column COL --new-column COL --mapping-json JSON
 experience-study ae --output-dir DIR --measure count|amount|both --group-by COL [COL ...]
 experience-study packet --output-dir DIR [--ae-path PATH]
 experience-study doctor --output-dir DIR
 experience-study run DATA_PATH --output-dir DIR [--ae-by COL [COL ...]]...
+```
+
+`band` and `regroup` perform deterministic feature engineering on the prepared dataset created by `profile`. They update `artifacts/analysis_inforce.parquet`, refresh the prepared dataset entry in the artifact manifest, and clear stale latest A/E and packet pointers. Historical A/E files remain on disk for auditability, but rerun `ae` before building a new packet.
+
+Use `band` to turn numeric fields into categorical cohort dimensions:
+
+```bash
+uv run experience-study band \
+  --output-dir runs/demo \
+  --source-column Face_Amount \
+  --new-column Face_Amount_Band \
+  --strategy custom \
+  --custom-bins '[0,250000,500000,1000000,null]' \
+  --labels '["0-250K","250K-500K","500K-1M","1M+"]'
+```
+
+Use `regroup` to collapse existing categorical values:
+
+```bash
+uv run experience-study regroup \
+  --output-dir runs/demo \
+  --source-column Risk_Class \
+  --new-column Risk_Class_Group \
+  --mapping-json '{"Preferred":["Preferred Plus","Preferred"],"Standard":["Standard Plus","Standard"],"Substandard":["Table A","Table B"]}'
 ```
 
 `ae` performs grouped cohort A/E analysis. It supports one or two grouping columns in MVP. Use `--filters-json` for filters, for example:
@@ -47,6 +89,8 @@ uv run experience-study ae \
 ```
 
 When `Issue_Age` is present, profiling creates a deterministic categorical `Issue_Age_Band` dimension with four equal-width bands. Use `Issue_Age_Band` for age cohort A/E analysis; raw `Issue_Age` remains ineligible as an A/E grouping dimension.
+
+Raw numeric fields such as `Issue_Age`, `Duration`, and `Face_Amount` remain ineligible as A/E grouping dimensions. Create engineered categorical dimensions first, then run grouped A/E analysis on those new columns.
 
 ## Artifacts
 

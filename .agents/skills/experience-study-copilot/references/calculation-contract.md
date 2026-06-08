@@ -25,6 +25,15 @@ Raw numeric fields are not eligible grouping dimensions in MVP:
 - `Duration`
 - `Face_Amount`
 
+Engineered categorical dimensions created by deterministic feature engineering are eligible grouping dimensions. Examples include:
+
+- `Issue_Age_Band`
+- `Face_Amount_Band`
+- `Duration_Band`
+- `Risk_Class_Group`
+
+Use `experience-study band` before A/E analysis to create categorical bands from numeric fields. Use `experience-study regroup` before A/E analysis to collapse categorical values into new cohort dimensions.
+
 A/E output columns:
 
 - `Dimensions`

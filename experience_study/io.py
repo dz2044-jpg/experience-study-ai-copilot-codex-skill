@@ -15,6 +15,7 @@ from experience_study.artifacts import (
     upsert_artifact_entry,
 )
 from experience_study.contracts import REQUIRED_NUMERIC_COLUMNS, SUPPORTED_INPUT_SUFFIXES
+from experience_study.feature_engineering import build_equal_width_band
 
 DEFAULT_ISSUE_AGE_BAND_COUNT = 4
 ISSUE_AGE_BAND_COLUMN = "Issue_Age_Band"
@@ -67,71 +68,16 @@ def classify_feature_type(df: pd.DataFrame, column: str) -> str:
     return "categorical"
 
 
-def _format_band_edge(value: float) -> str:
-    if float(value).is_integer():
-        return str(int(value))
-    return f"{value:.2f}".rstrip("0").rstrip(".")
-
-
-def build_equal_width_band(
-    series: pd.Series,
-    *,
-    band_count: int = DEFAULT_ISSUE_AGE_BAND_COUNT,
-) -> pd.Series:
-    """Return deterministic equal-width numeric bands for a source series.
-
-    Args:
-        series: Numeric source values to band.
-        band_count: Number of equal-width bands to create.
-
-    Returns:
-        A string series containing interval labels, with missing values labeled
-        separately.
-
-    Raises:
-        ValueError: If `band_count` is less than one.
-    """
-
-    if band_count < 1:
-        raise ValueError("band_count must be at least 1.")
-
-    numeric = pd.to_numeric(series, errors="coerce")
-    non_null = numeric.dropna()
-    if non_null.empty:
-        return pd.Series(["Missing"] * len(series), index=series.index, dtype="string")
-
-    minimum = float(non_null.min())
-    maximum = float(non_null.max())
-    if minimum == maximum:
-        label = f"{_format_band_edge(minimum)} to {_format_band_edge(maximum)}"
-        return pd.Series(
-            [label if pd.notna(value) else "Missing" for value in numeric],
-            index=series.index,
-            dtype="string",
-        )
-
-    width = (maximum - minimum) / band_count
-    edges = [minimum + (width * index) for index in range(band_count)] + [maximum]
-    labels = [
-        f"{_format_band_edge(edges[index])} to {_format_band_edge(edges[index + 1])}"
-        for index in range(band_count)
-    ]
-    banded = pd.cut(
-        numeric,
-        bins=edges,
-        labels=labels,
-        include_lowest=True,
-        duplicates="raise",
-    )
-    return banded.astype("string").fillna("Missing")
-
-
 def add_default_derived_dimensions(df: pd.DataFrame) -> pd.DataFrame:
     """Add deterministic derived cohort dimensions used by the A/E workflow."""
 
     prepared = df.copy()
     if "Issue_Age" in prepared.columns and ISSUE_AGE_BAND_COLUMN not in prepared.columns:
-        prepared[ISSUE_AGE_BAND_COLUMN] = build_equal_width_band(prepared["Issue_Age"])
+        prepared[ISSUE_AGE_BAND_COLUMN] = build_equal_width_band(
+            prepared["Issue_Age"],
+            band_count=DEFAULT_ISSUE_AGE_BAND_COUNT,
+            source_column="Issue_Age",
+        )
     return prepared
 
 
