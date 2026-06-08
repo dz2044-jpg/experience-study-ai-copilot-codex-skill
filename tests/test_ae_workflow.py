@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+from datetime import datetime
 import json
 from pathlib import Path
+import re
 
 import pandas as pd
 import pytest
 
 from experience_study.ae_math import compute_ae_ci, compute_ae_ci_amount
 from experience_study.analysis import run_ae_analysis
-from experience_study.artifacts import load_context, stable_slug
+from experience_study.artifacts import load_context, stable_slug, timestamped_output_dir
 from experience_study.cli import main
 from experience_study.contracts import AE_SUMMARY_COLUMNS
 from experience_study.io import ISSUE_AGE_BAND_COLUMN, profile_dataset
@@ -19,6 +21,18 @@ from experience_study.validation import run_validation
 def test_stable_slug_rules_preserve_order_and_clean_names() -> None:
     assert stable_slug(["Risk Class", "Issue_Age_Band", "Smoker?"]) == "risk_class_issue_age_band_smoker"
     assert stable_slug(["Smoker?", "Risk Class"]) == "smoker_risk_class"
+
+
+def test_timestamped_output_dir_prefixes_name_and_avoids_collisions(tmp_path: Path) -> None:
+    requested = tmp_path / "runs" / "risk-regroup"
+    now = datetime(2026, 6, 8, 14, 5)
+
+    first_candidate = timestamped_output_dir(requested, now=now)
+    first_candidate.mkdir(parents=True)
+    second_candidate = timestamped_output_dir(requested, now=now)
+
+    assert first_candidate == tmp_path / "runs" / "202606081405_risk-regroup"
+    assert second_candidate == tmp_path / "runs" / "202606081405_risk-regroup_02"
 
 
 def test_ci_math_preserves_reference_behavior() -> None:
@@ -105,6 +119,37 @@ def test_profile_creates_issue_age_band_and_one_way_ae_artifacts(
     assert issue_age_df["Dimensions"].str.startswith(f"{ISSUE_AGE_BAND_COLUMN}=").all()
     assert gender_df["Dimensions"].str.startswith("Gender=").all()
     assert issue_age_df["Sum_MAC"].sum() == gender_df["Sum_MAC"].sum()
+
+
+def test_cli_run_can_create_timestamped_output_dir(
+    tmp_path: Path,
+    sample_csv_path: Path,
+) -> None:
+    requested_output_dir = tmp_path / "runs" / "gender-count"
+
+    exit_code = main(
+        [
+            "run",
+            str(sample_csv_path),
+            "--output-dir",
+            str(requested_output_dir),
+            "--timestamp-output-dir",
+            "--ae-by",
+            "Gender",
+            "--measure",
+            "count",
+        ]
+    )
+
+    assert exit_code == 0
+    assert not requested_output_dir.exists()
+
+    created_dirs = list((tmp_path / "runs").iterdir())
+    assert len(created_dirs) == 1
+    actual_output_dir = created_dirs[0]
+    assert re.fullmatch(r"\d{12}_gender-count", actual_output_dir.name)
+    assert (actual_output_dir / "artifacts" / "ae" / "latest.csv").exists()
+    assert (actual_output_dir / "artifacts" / "ai" / "ai_ae_packet.json").exists()
 
 
 def test_cli_ae_prints_measure_specific_presentation_tables(

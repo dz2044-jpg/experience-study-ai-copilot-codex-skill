@@ -43,7 +43,7 @@ uv run experience-study ae \
 ## CLI
 
 ```bash
-experience-study profile DATA_PATH --output-dir DIR
+experience-study profile DATA_PATH --output-dir DIR [--timestamp-output-dir]
 experience-study schema --output-dir DIR [--data-path PATH]
 experience-study validate --output-dir DIR [--data-path PATH]
 experience-study band --output-dir DIR --source-column COL --new-column COL --strategy equal-width|quantile|custom
@@ -51,8 +51,26 @@ experience-study regroup --output-dir DIR --source-column COL --new-column COL -
 experience-study ae --output-dir DIR --measure count|amount|both --group-by COL [COL ...]
 experience-study packet --output-dir DIR [--ae-path PATH]
 experience-study doctor --output-dir DIR
-experience-study run DATA_PATH --output-dir DIR [--ae-by COL [COL ...]]...
+experience-study run DATA_PATH --output-dir DIR [--timestamp-output-dir] [--ae-by COL [COL ...]]...
 ```
+
+Use `--timestamp-output-dir` when starting a new `profile` or `run` workflow to avoid
+accidentally reusing an existing run directory. It prefixes the final directory name
+with `YYYYMMDDHHMM_` and adds a numeric suffix if that minute/name already exists:
+
+```bash
+uv run experience-study run data/input/synthetic_inforce.csv \
+  --output-dir runs/risk_regroup_count \
+  --timestamp-output-dir \
+  --ae-by Risk_Class_Group \
+  --measure count
+```
+
+The example above writes to a directory like
+`runs/202606081153_risk_regroup_count`. For multi-step workflows, use
+`--timestamp-output-dir` only on the initial `profile` command, then reuse the actual
+generated output directory printed by the CLI for `regroup`, `ae`, `packet`, and
+`doctor`.
 
 `band` and `regroup` perform deterministic feature engineering on the prepared dataset created by `profile`. They update `artifacts/analysis_inforce.parquet`, refresh the prepared dataset entry in the artifact manifest, and clear stale latest A/E and packet pointers. Historical A/E files remain on disk for auditability, but rerun `ae` before building a new packet.
 

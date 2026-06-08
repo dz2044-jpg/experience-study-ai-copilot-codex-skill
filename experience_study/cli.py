@@ -9,7 +9,7 @@ import sys
 from typing import Any
 
 from experience_study.analysis import parse_filters, run_ae_analysis
-from experience_study.artifacts import WorkflowContext, load_context
+from experience_study.artifacts import WorkflowContext, load_context, timestamped_output_dir
 from experience_study.contracts import MAX_TOP_N, VALID_MEASURES, VALID_SORT_COLUMNS
 from experience_study.feature_engineering import (
     DEFAULT_UNMAPPED_VALUE,
@@ -22,8 +22,17 @@ from experience_study.packet import build_ai_packet
 from experience_study.validation import run_validation
 
 
-def _add_output_dir(parser: argparse.ArgumentParser) -> None:
+def _add_output_dir(parser: argparse.ArgumentParser, *, allow_timestamp: bool = False) -> None:
     parser.add_argument("--output-dir", required=True, help="Workflow output directory.")
+    if allow_timestamp:
+        parser.add_argument(
+            "--timestamp-output-dir",
+            action="store_true",
+            help=(
+                "Prefix the final output directory name with YYYYMMDDHHMM_ and choose "
+                "a unique suffix on collision. Use only when starting a new workflow."
+            ),
+        )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -37,7 +46,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     profile = subparsers.add_parser("profile", help="Profile a CSV or Parquet dataset.")
     profile.add_argument("data_path")
-    _add_output_dir(profile)
+    _add_output_dir(profile, allow_timestamp=True)
 
     schema = subparsers.add_parser("schema", help="Inspect dataset schema.")
     _add_output_dir(schema)
@@ -86,7 +95,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     run = subparsers.add_parser("run", help="Profile, validate, run A/E, and build packet.")
     run.add_argument("data_path")
-    _add_output_dir(run)
+    _add_output_dir(run, allow_timestamp=True)
     run.add_argument("--ae-by", nargs="+", action="append", default=[])
     run.add_argument("--measure", choices=sorted(VALID_MEASURES), default="both")
     run.add_argument("--filters-json")
@@ -204,8 +213,11 @@ def _error(message: str) -> int:
     return 1
 
 
-def _load(output_dir: str) -> WorkflowContext:
-    return load_context(Path(output_dir))
+def _load(output_dir: str, *, timestamp_output_dir: bool = False) -> WorkflowContext:
+    resolved_output_dir = (
+        timestamped_output_dir(output_dir) if timestamp_output_dir else Path(output_dir)
+    )
+    return load_context(resolved_output_dir)
 
 
 def _doctor_payload(context: WorkflowContext) -> dict[str, Any]:
@@ -235,7 +247,10 @@ def _missing_prerequisites(context: WorkflowContext) -> list[str]:
 def run_command(args: argparse.Namespace) -> int:
     """Execute a parsed CLI command."""
 
-    context = _load(args.output_dir)
+    context = _load(
+        args.output_dir,
+        timestamp_output_dir=bool(getattr(args, "timestamp_output_dir", False)),
+    )
     try:
         if args.command == "profile":
             _print_result(profile_dataset(context, args.data_path))

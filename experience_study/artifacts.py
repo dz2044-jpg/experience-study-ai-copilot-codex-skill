@@ -28,6 +28,38 @@ def utc_timestamp() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def timestamped_output_dir(output_dir: str | Path, *, now: datetime | None = None) -> Path:
+    """Return a collision-resistant output dir with a minute timestamp prefix.
+
+    Args:
+        output_dir: Requested workflow output directory.
+        now: Optional timestamp used for deterministic tests. Local time is used
+            when omitted so run directory names match the operator's clock.
+
+    Returns:
+        A path whose final directory name is prefixed with `YYYYMMDDHHMM_`.
+
+    Raises:
+        ValueError: If the provided path does not contain a usable final
+            directory name or no unique candidate can be found.
+    """
+
+    base_path = Path(output_dir)
+    if not base_path.name:
+        raise ValueError("Timestamped output directories require a final directory name.")
+
+    timestamp = (now or datetime.now()).strftime("%Y%m%d%H%M")
+    candidate = base_path.with_name(f"{timestamp}_{base_path.name}")
+    if not candidate.exists():
+        return candidate
+
+    for suffix in range(2, 1000):
+        candidate = base_path.with_name(f"{timestamp}_{base_path.name}_{suffix:02d}")
+        if not candidate.exists():
+            return candidate
+    raise ValueError(f"Unable to find a unique timestamped output directory for `{base_path}`.")
+
+
 def file_sha256(path: str | Path) -> str:
     """Return a file SHA256 digest."""
 
