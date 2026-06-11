@@ -1,6 +1,6 @@
 ---
 name: experience-study-copilot
-description: Use this skill for deterministic Experience Study A/E workflows: profiling CSV/Parquet files, validation, grouped count/amount A/E analysis, audit artifacts, and sanitized aggregate packets. Use the CLI; never calculate A/E manually.
+description: "Use this skill for deterministic Experience Study A/E workflows: profiling CSV/Parquet files, validation, grouped count/amount A/E analysis, audit artifacts, and sanitized aggregate packets. Use the CLI; never calculate A/E manually."
 ---
 
 # Experience Study Copilot
