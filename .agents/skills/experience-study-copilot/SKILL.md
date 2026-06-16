@@ -1,11 +1,11 @@
 ---
 name: experience-study-copilot
-description: "Use this skill for deterministic Experience Study A/E workflows: profiling CSV/Parquet files, validation, grouped count/amount A/E analysis, audit artifacts, and sanitized aggregate packets. Use the CLI; never calculate A/E manually."
+description: "Use this skill for deterministic Experience Study A/E workflows: profiling CSV/Parquet files, validation, grouped count/amount A/E analysis, audit artifacts, sanitized aggregate packets, and A/E visualization exhibits such as plots, charts, forest plots, treemaps, tables, or visual reports. Use the CLI; never calculate A/E manually."
 ---
 
 # Experience Study Copilot
 
-Use this skill when the user asks for Experience Study, actual-to-expected, A/E, mortality experience, count A/E, amount A/E, grouped cohort analysis, feature engineering, banding, bucketing, regrouping, or breakouts by actuarial dimensions.
+Use this skill when the user asks for Experience Study, actual-to-expected, A/E, mortality experience, count A/E, amount A/E, grouped cohort analysis, feature engineering, banding, bucketing, regrouping, breakouts by actuarial dimensions, or deterministic A/E visual exhibits.
 
 ## Core Rules
 
@@ -17,6 +17,7 @@ Use this skill when the user asks for Experience Study, actual-to-expected, A/E,
 - Do not add or call package-level LLM clients.
 - Prefer actuarial wording: A/E analysis, count A/E, amount A/E, grouped by, breakout, cohort, dimension, study year.
 - Avoid saying "sweep" unless the user says it first.
+- For visual requests, use `experience-study visualize`; never manually draw or invent A/E visual values.
 
 ## Workflow
 
@@ -34,6 +35,7 @@ Read references as needed:
 - `references/calculation-contract.md` for required columns and output fields.
 - `references/privacy-contract.md` for AI packet boundaries.
 - `references/artifacts.md` for artifact locations and meaning.
+- `references/visualization.md` for forest plot, treemap, and visual exhibit routing.
 - `references/examples.md` for natural-language translation examples.
 
 ## Natural Language Mapping
@@ -53,4 +55,7 @@ Read references as needed:
 - "Custom cut points" means `experience-study band --strategy custom --custom-bins JSON --labels JSON`.
 - "Regroup", "collapse", "combine categories", or "map categories" means use `experience-study regroup` before A/E analysis.
 - After `band` or `regroup`, rerun `experience-study ae` before `experience-study packet`; feature engineering clears stale latest A/E and packet pointers.
+- "Plot count A/E", "show count A/E visuals", or "count forest plot" means `experience-study visualize --metric count`.
+- "Plot amount A/E", "show amount A/E visuals", or "amount treemap" means `experience-study visualize --metric amount`.
+- "Plot A/E", "visualize A/E", or "show charts" without count or amount is ambiguous; ask whether the user wants count A/E visuals or amount A/E visuals.
 - If filtering versus grouping is ambiguous, ask a concise clarification before running.

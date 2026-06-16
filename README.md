@@ -50,6 +50,7 @@ experience-study band --output-dir DIR --source-column COL --new-column COL --st
 experience-study regroup --output-dir DIR --source-column COL --new-column COL --mapping-json JSON
 experience-study ae --output-dir DIR --measure count|amount|both --group-by COL [COL ...]
 experience-study packet --output-dir DIR [--ae-path PATH]
+experience-study visualize --output-dir DIR --metric count|amount [--ae-path PATH]
 experience-study doctor --output-dir DIR
 experience-study run DATA_PATH --output-dir DIR [--timestamp-output-dir] [--ae-by COL [COL ...]]...
 ```
@@ -110,6 +111,16 @@ When `Issue_Age` is present, profiling creates a deterministic categorical `Issu
 
 Raw numeric fields such as `Issue_Age`, `Duration`, and `Face_Amount` remain ineligible as A/E grouping dimensions. Create engineered categorical dimensions first, then run grouped A/E analysis on those new columns.
 
+`visualize` generates deterministic SVG-first A/E exhibits from aggregate A/E summaries only:
+
+```bash
+uv run experience-study visualize \
+  --output-dir runs/demo \
+  --metric amount
+```
+
+Use `--metric count` or `--metric amount`; unspecified metric is intentionally rejected so count and amount A/E exhibits are not confused. The default bundle includes a horizontal forest plot, risk treemap, cohort detail table SVG, review table CSV, and canonical visual spec JSON. Forest/table row selection preserves the source A/E artifact order and uses the first `--top-n` rows. Treemap visuals use all source cohorts. Count treemaps are sized by `Sum_MEC`; amount treemaps are sized by `Sum_MEF`.
+
 ## Artifacts
 
 Artifacts are written below `--output-dir`:
@@ -120,15 +131,20 @@ Artifacts are written below `--output-dir`:
 - `artifacts/ae/latest.csv`
 - `artifacts/ae/latest_1way.csv`
 - `artifacts/ae/latest_2way.csv`
+- `artifacts/visuals/ae_forest_<source>_<metric>_<style>_<hash>.svg`
+- `artifacts/visuals/ae_treemap_<source>_<metric>_<style>_<hash>.svg`
+- `artifacts/visuals/ae_table_<source>_<metric>_<style>_<hash>.svg`
+- `artifacts/visuals/ae_table_<source>_<metric>_<style>_<hash>.csv`
+- `artifacts/visuals/ae_visual_spec_<source>_<metric>_<style>_<hash>.json`
 - `artifacts/audit/methodology_log.json`
 - `artifacts/audit/artifact_manifest.json`
 - `artifacts/ai/ai_ae_packet.json`
 
-Canonical A/E summary CSVs contain the full eligible grouped result. `--top-n` only affects CLI display and AI packet selection.
+Canonical A/E summary CSVs contain the full eligible grouped result. `--top-n` only affects CLI display, AI packet selection, and forest/table visual selection.
 
 ## Privacy Boundary
 
-AI packets are built only from aggregate A/E summary CSVs and audit metadata. They do not read source data or prepared row-level data. Sensitive dimensions and filters are masked before packet serialization.
+AI packets and visual exhibits are built only from aggregate A/E summary CSVs and audit metadata. They do not read source data or prepared row-level data. Sensitive dimensions and filters are masked before packet serialization; sensitive visual labels are masked before SVG, CSV, and visual spec output.
 
 ## Tests
 

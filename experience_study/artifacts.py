@@ -135,6 +135,10 @@ class WorkflowContext:
         return self.artifacts_dir / "ai"
 
     @property
+    def visuals_dir(self) -> Path:
+        return self.artifacts_dir / "visuals"
+
+    @property
     def default_prepared_path(self) -> Path:
         return self.artifacts_dir / PREPARED_DATASET_FILENAME
 
@@ -161,7 +165,13 @@ class WorkflowContext:
         return self.ae_dir / "latest.csv"
 
     def ensure_dirs(self) -> None:
-        for directory in (self.artifacts_dir, self.ae_dir, self.audit_dir, self.ai_dir):
+        for directory in (
+            self.artifacts_dir,
+            self.ae_dir,
+            self.audit_dir,
+            self.ai_dir,
+            self.visuals_dir,
+        ):
             directory.mkdir(parents=True, exist_ok=True)
 
     def to_json_dict(self) -> dict[str, Any]:

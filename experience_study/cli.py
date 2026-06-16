@@ -20,6 +20,14 @@ from experience_study.feature_engineering import (
 from experience_study.io import inspect_schema, profile_dataset
 from experience_study.packet import build_ai_packet
 from experience_study.validation import run_validation
+from experience_study.visualization import (
+    DEFAULT_VISUAL_HEIGHT,
+    DEFAULT_VISUAL_WIDTH,
+    VALID_VISUAL_FORMATS,
+    VALID_VISUAL_METRICS,
+    VALID_VISUAL_STYLES,
+    generate_visual_bundle,
+)
 
 
 def _add_output_dir(parser: argparse.ArgumentParser, *, allow_timestamp: bool = False) -> None:
@@ -89,6 +97,17 @@ def build_parser() -> argparse.ArgumentParser:
     packet.add_argument("--ae-path")
     packet.add_argument("--top-n", type=int, default=MAX_TOP_N)
     packet.add_argument("--masking-min-claims", type=int)
+
+    visualize = subparsers.add_parser("visualize", help="Generate deterministic A/E SVG visual exhibits.")
+    _add_output_dir(visualize)
+    visualize.add_argument("--metric", choices=sorted(VALID_VISUAL_METRICS), required=True)
+    visualize.add_argument("--ae-path")
+    visualize.add_argument("--format", dest="output_format", choices=sorted(VALID_VISUAL_FORMATS), default="svg")
+    visualize.add_argument("--style", choices=sorted(VALID_VISUAL_STYLES), default="formal")
+    visualize.add_argument("--title")
+    visualize.add_argument("--width", type=int, default=DEFAULT_VISUAL_WIDTH)
+    visualize.add_argument("--height", type=int, default=DEFAULT_VISUAL_HEIGHT)
+    visualize.add_argument("--top-n", type=int, default=MAX_TOP_N)
 
     doctor = subparsers.add_parser("doctor", help="Inspect workflow artifact readiness.")
     _add_output_dir(doctor)
@@ -309,6 +328,21 @@ def run_command(args: argparse.Namespace) -> int:
                     ae_path=args.ae_path,
                     top_n=args.top_n,
                     masking_min_claims=args.masking_min_claims,
+                )
+            )
+            return 0
+        if args.command == "visualize":
+            _print_result(
+                generate_visual_bundle(
+                    context,
+                    metric=args.metric,
+                    ae_path=args.ae_path,
+                    output_format=args.output_format,
+                    style=args.style,
+                    title=args.title,
+                    width=args.width,
+                    height=args.height,
+                    top_n=args.top_n,
                 )
             )
             return 0
