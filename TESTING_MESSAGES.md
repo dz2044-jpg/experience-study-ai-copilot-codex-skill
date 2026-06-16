@@ -9,6 +9,86 @@ Each section includes:
 - **Testing message**: paste this into Codex.
 - **Suggested response**: the kind of response Codex should provide if the workflow behaves correctly.
 
+## Execution vs Development Mode Guard
+
+**Testing message**
+
+```text
+Use data/input/synthetic_inforce.csv. Create 4 quantile bands for Face_Amount and run amount A/E by the new band.
+```
+
+**Suggested response**
+
+```text
+Execution Mode. Use existing experience-study band, ae, and packet commands. Do not edit source files, tests, docs, or skill files.
+
+Expected commands:
+- uv run experience-study profile data/input/synthetic_inforce.csv --output-dir <DIR>
+- uv run experience-study validate --output-dir <DIR>
+- uv run experience-study band --output-dir <DIR> --source-column Face_Amount --new-column Face_Amount_Band --strategy quantile --bins 4
+- uv run experience-study ae --output-dir <DIR> --measure amount --group-by Face_Amount_Band
+- uv run experience-study packet --output-dir <DIR>
+```
+
+**Testing message**
+
+```text
+Use data/input/synthetic_inforce.csv and output dir runs/test_dashboard_guard. Create an interactive dashboard for amount A/E by Gender.
+```
+
+**Suggested response**
+
+```text
+Unsupported workflow request. The current Experience Study CLI supports static SVG visualization through experience-study visualize, but not interactive dashboards.
+
+What I can do with the current CLI:
+- run amount A/E grouped by Gender
+- show the cohort table in the response
+- build the sanitized AI packet
+- generate the supported deterministic SVG visual bundle with experience-study visualize
+- provide artifact paths
+
+I should not edit source files, tests, docs, or skill files unless you explicitly ask for an implementation plan or repo change.
+```
+
+**Testing message**
+
+```text
+Use data/input/synthetic_inforce.csv and output dir runs/test_visual_guard. Plot amount A/E by Gender.
+```
+
+**Suggested response**
+
+```text
+Execution Mode. Use existing CLI capabilities: run amount A/E grouped by Gender, build the sanitized packet if interpretation is needed, then run experience-study visualize --metric amount. Do not edit source files, tests, docs, or skill files.
+```
+
+**Testing message**
+
+```text
+Add dashboard support for Experience Study A/E results.
+```
+
+**Suggested response**
+
+```text
+Development Mode. The user explicitly asked to add support for a new capability, so repo inspection and code changes may be appropriate after confirming scope and implementation plan.
+```
+
+**Testing message**
+
+```text
+Can you make the tool support Excel export?
+```
+
+**Suggested response**
+
+```text
+Do you want me to use existing Experience Study CLI functionality, or are you asking me to change the repo to add Excel export support?
+```
+
+No source files, tests, docs, or skill files should be edited until the user confirms repo/code change intent.
+
 ## 1. Happy Path End-To-End Workflow
 
 **Testing message**
@@ -365,3 +445,4 @@ Codex should not interpret raw source rows or prepared row-level data.
 | Ambiguous request | clarification before calculation |
 | Audit trail inspection | methodology log and manifest behavior |
 | Privacy boundary inspection | packet-only interpretation |
+| Execution vs development mode guard | use existing CLI for workflow requests; unsupported response without file edits |

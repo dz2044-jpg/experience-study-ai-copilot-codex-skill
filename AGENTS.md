@@ -6,6 +6,10 @@ This repo is a CLI-first deterministic workflow engine plus Codex skill interfac
 
 ## Rules
 
+- Default to execution mode for Experience Study workflow requests. When a user asks to use, run, analyze, calculate, visualize, show, generate, inspect, interpret, create bands, create regrouped dimensions, generate packets, or generate visuals, use existing CLI commands and artifacts only.
+- Enter development mode only when the user expresses explicit repo/code/implementation intent, such as "implement a new feature", "add support for", "modify the repo", "fix the code", "refactor the module", "edit files", "update the CLI implementation", or "create a PR".
+- Plain "create" or "generate" does not trigger development mode by itself. For requests like "Can you make the tool support X?", ask for confirmation before editing unless the user clearly requests implementation.
+- If the requested workflow action is not supported by the current CLI, respond with a clear unsupported-capability message and do not edit source files, tests, docs, or skill files. Mention the closest supported CLI actions and ask whether the user wants an implementation plan.
 - Python owns all calculations, aggregations, A/E ratios, confidence intervals, validation, and artifacts.
 - Codex may orchestrate workflows and interpret aggregate artifacts only.
 - Do not add package-level LLM clients.
